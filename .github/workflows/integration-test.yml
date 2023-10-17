@@ -1,0 +1,65 @@
+name: test
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: aws_database # Specify the name of the database to be created here
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+          
+    strategy:
+      matrix:
+        node-version: [19.2.0]
+
+    steps:
+      - name: actions/checkout
+        uses: actions/checkout@v3
+
+      - name: Wait for MySQL to become available
+        run: |
+          for i in {1..30}; do
+            if echo 'SELECT 1' | mysql --host=127.0.0.1 --user=root --password=root &> /dev/null; then
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 1
+          done
+
+      - name: Check and verify database existence
+        run: |
+          echo 'SHOW DATABASES;' | mysql --host=127.0.0.1 --user=root --password=root | grep aws_database
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Check Current Working Directory
+        run: |
+          pwd  # Print the current working directory
+          ls   # List files in the current directory (optional)
+
+      - name: Load environment variables from .env file
+        run: |
+          source .env
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install mocha chai --save-dev
+
+          
+
+      - name: Run Node.js app
+        run: npm test
