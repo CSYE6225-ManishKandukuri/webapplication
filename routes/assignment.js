@@ -5,12 +5,14 @@ const bcrypt = require('bcrypt');
 const { Op } = require('sequelize'); 
 
 const { User,Assignment,AssignmentCreator } = require('../models/user_model.js');
-const { getAssignmentbyID, getUserAssignments, postAssignment, removeAssignment, updateAssignment } = require('../controller/assignmentController.js');
+const { getAssignmentbyID, getUserAssignments, postAssignment, removeAssignment, updateAssignment,patchAssignment } = require('../controller/assignmentController.js');
 
 
 
 
 router.get('/',getUserAssignments).get('/:id', getAssignmentbyID);
+router.patch('/:id', patchAssignment);
+
 
 router.post('/',postAssignment);
 
