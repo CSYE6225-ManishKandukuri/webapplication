@@ -17,7 +17,11 @@ function validatePoints(value)
 
 function validateAttempts(value)
 {
-  if (value < 1 || value > 100 )
+
+  if (!Number.isInteger(value)) {
+    throw new Error('num_of_attempts must be an integer');
+  }
+  else if (value < 1 || value > 100 )
   {
     throw new Error('Attempts must be from 1 to 100');
   }
