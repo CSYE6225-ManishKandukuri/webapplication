@@ -108,19 +108,13 @@ EOF
 
  
 
-# sudo mysql -u root -e "create user manish identified by 'password'"
-
-# sudo mysql -u root -e "create database aws_database"
-
-# sudo mysql -u root -e "grant all previliges on test.* to 'mohan'@'localhost' identified by 'password'"
-
  
 
 sudo mysql -u root -e "create user 'manish'@'localhost' identified by 'password'"
 
 sudo mysql -u root -e "create database aws_database"
 
-sudo mysql -u root -e "grant all privileges on test.* to 'manish'@'localhost' identified by 'password'"
+sudo mysql -u root -e "grant all privileges on aws_database.* to 'manish'@'localhost' identified by 'password'"
 
 #npm install --save
 
