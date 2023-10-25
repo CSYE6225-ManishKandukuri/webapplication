@@ -1,167 +1,73 @@
 sleep 30
-
 sudo apt update
-
 sudo apt install nodejs
-
 sudo node -v
-
 sudo apt install npm
-
-sudo apt install curl
-
+sudo apt install curl zip unzip -y
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-
 sudo apt install nodejs
-
 node -v
-
 npm -v
-
  
-
-#npm ci
-
+sudo lsb_release -a
  
-
-echo "ManishLog"
-
+sudo useradd -m -p $(openssl passwd -1 password) webappuser
  
-
-sudo apt-get install mariadb-server unzip -y
-
+sudo cat /etc/passwd
  
-
-sudo systemctl start mysql
-
-sudo systemctl enable mysql
-
-sudo systemctl status mysql
-
-sudo apt-get install expect
-
  
-
-echo "ManishLog1"
-
- 
-
 sudo pwd
-
  
-
-echo "ManishLog2"
-
+echo "current repos"
  
-
 sudo ls -ltrh
-
  
-
-expect <<EOF
-
-set timeout -1
-
-spawn sudo mysql_secure_installation
-
+sudo mkdir /home/webappuser/webapp
  
-
-expect "Enter current password for root (enter for none):"
-
-send "\r"
-
+sudo cp /home/admin/webapp2.zip /home/webappuser/webapp/
  
-
-expect "Set root password? [Y/n]"
-
-send "n\r"
-
+ls -ltrah /home/webappuser/webapp/
  
-
-expect "Remove anonymous users? [Y/n]"
-
-send "n\r"
-
+cd /home/webappuser/webapp
  
-
-expect "Disallow root login remotely? [Y/n]"
-
-send "n\r"
-
  
-
-expect "Remove test database and access to it? [Y/n]"
-
-send "n\r"
-
+ls -ltrah
  
-
-expect "Reload privilege tables now? [Y/n]"
-
-send "Y\r"
-
+pwd
  
-
-expect eof
-
-EOF
-
+sudo unzip /home/webappuser/webapp/webapp2.zip
  
-
+sudo ls -ltrah /home/webappuser/webapp
  
-
-sudo mysql -u root -e "create user 'manish'@'localhost' identified by 'password'"
-
-sudo mysql -u root -e "create database aws_database"
-
-sudo mysql -u root -e "grant all privileges on aws_database.* to 'manish'@'localhost' identified by 'password'"
-
-#npm install --save
-
-#npm fund
-
+sudo npm ci
  
-
-echo "Databases:"
-
+sudo npm install --save
  
-
-sudo pwd
-
+sudo npm fund
  
-
-echo "Repo folders:"
-
+ls -ltrah
  
-
-sudo ls -ltrh
-
  
-
+cd /home/admin/
  
-
+sudo chmod -R 774 /home/webappuser/
  
-
-cd ~/ && unzip webapplication.zip
-
+sudo chown -R webappuser:webappuser /home/webappuser/webapp
  
-
-npm ci
-
-npm install --save
-
-npm fund
-
+sudo ls -ltrah /home/webappuser/
  
-
+sudo mv /tmp/webapp.service /etc/systemd/system/webapp.service
  
-
-# sudo mv /tmp/webapplication.service /etc/systemd/system/webapplication.service
-
+sudo systemctl daemon-reload
  
-
-# sudo systemctl enable webapplication.service
-
+sudo systemctl enable webapp
  
-
-# sudo systemctl start webapplication.service
+sudo systemctl start webapp
+ 
+sudo echo $?
+ 
+sleep 20
+ 
+sudo systemctl status webapp
+ 
+sudo echo $?
