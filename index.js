@@ -9,6 +9,7 @@ const { UserSchema, AssignmentSchema} = require('./models/user_model.js');
 const assignmentRoute = require('./routes/assignment.js');
 const { createUsers, processCSVFile } = require('./userCreate.js')
 const  healthCheckRoutes  = require('./routes/healthCheck.js');
+require('dotenv').config();
 
 //fs.createReadStream('./opt/user.csv');
 
@@ -297,13 +298,19 @@ const userExist = async (id) => {
     }
   };*/
 
+// function startServer() {
+//     const port = 8080;
+//     app.listen(port, () => {
+//         console.log(`Server is running on port ${port}`);
+//     });
+// }
+
 function startServer() {
-    const port = 8080;
+    const port = process.env.PORT || 8080; // Use the environment variable PORT or default to 8080
     app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
     });
 }
-
 
 async function main() {
     try {

@@ -71,8 +71,13 @@ build {
   ]
 
   provisioner "file" {
-    source      = "./webapplication.zip"
-    destination = "/home/admin/webapplication.zip"
+    source      = "./webapp2.zip"
+    destination = "/home/admin/webapp2.zip"
+  }
+
+  provisioner "file" {
+    source      = "./webapp.service"
+    destination = "/tmp/webapp.service"
   }
 
   provisioner "shell" {

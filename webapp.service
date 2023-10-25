@@ -1,0 +1,18 @@
+[Unit]
+Description=Web Application
+After=network.target
+Wants=cloud-init.target
+
+
+[Service]
+WorkingDirectory=/home/webappuser/webapp/
+ExecStart=/usr/bin/node /home/webappuser/webapp/index.js
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=webapp-app
+User=webappuser
+
+[Install]
+WantedBy=multi-user.target
