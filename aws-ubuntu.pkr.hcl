@@ -45,7 +45,7 @@ source "amazon-ebs" "debian" {
   region          = "${var.ami_region}"
   ssh_username    = "${var.login_username}"
   ami_description = "created from packer"
-  source_ami_filter {
+  source_ami_filter 
     filters = {
       name                = "debian-*-*-amd64-*"
       root-device-type    = "ebs"
