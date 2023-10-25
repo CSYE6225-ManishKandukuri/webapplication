@@ -24,7 +24,7 @@ sudo ls -ltrh
  
 sudo mkdir /home/webappuser/webapp
  
-sudo cp /home/admin/webapp2.zip /home/webappuser/webapp/
+sudo cp /home/admin/webapplication.zip /home/webappuser/webapp/
  
 ls -ltrah /home/webappuser/webapp/
  
@@ -35,7 +35,7 @@ ls -ltrah
  
 pwd
  
-sudo unzip /home/webappuser/webapp/webapp2.zip
+sudo unzip /home/webappuser/webapp/webapplication.zip
  
 sudo ls -ltrah /home/webappuser/webapp
  
