@@ -5,7 +5,7 @@ locals {
  
 
 variable "ami_name" {
-  type    = string
+  type    =   string
   default = "test123"
 }
 variable "ami_region" {
