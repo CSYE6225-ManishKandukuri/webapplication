@@ -1,6 +1,7 @@
 const express = require('express');
 const sequelize = require('../database.js');
 const router = express.Router();
+const log = require('../logger/logs.js');
 
 
 const checkHealth = async (req,res) => 
@@ -12,10 +13,12 @@ const checkHealth = async (req,res) =>
     
     if (status)
     {
+        log.logMessage('This is an example log message in your code');
         res.status(200).json();
     }
     else
     {
+        log.logMessage('This is an example log message in your code');
         res.status(503).json();
     }
 

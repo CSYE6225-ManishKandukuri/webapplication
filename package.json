@@ -23,6 +23,7 @@
     "sequelize": "^6.33.0",
     "sequelize-noupdate-attributes": "^1.0.0",
     "supertest": "^6.3.3",
-    "uuidv4": "^6.2.13"
+    "uuidv4": "^6.2.13",
+    "winston": "^3.11.0"
   }
 }

@@ -83,4 +83,9 @@ build {
   provisioner "shell" {
     script = "./installabc.sh"
   }
+
+  provisioner "file" {
+    source      = "./amazon-cloudwatch-agent.json"
+    destination = "/tmp/amazon-cloudwatch-agent.json"
+  }
 }
