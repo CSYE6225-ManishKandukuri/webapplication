@@ -13,12 +13,12 @@ const checkHealth = async (req,res) =>
     
     if (status)
     {
-        log.logMessage('This is an example log message in your code');
+        log.info('This is an example log message in your code');
         res.status(200).json();
     }
     else
     {
-        log.logMessage('This is an example log message in your code');
+        log.info('This is an example log message in your code');
         res.status(503).json();
     }
 
