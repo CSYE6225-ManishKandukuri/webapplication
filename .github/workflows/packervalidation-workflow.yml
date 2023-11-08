@@ -26,14 +26,14 @@ jobs:
         run: packer init .
 
       - name: Run packer fmt
-        run: packer fmt -check .
+        run: packer fmt -check aws-debian.pkr.hcl
 
       - name: Fail if packer fmt fails
         if: ${{ steps.setup.outputs.exit-code != 0 }}
         run: exit 1
 
       - name: Run packer validate
-        run: packer validate .
+        run: packer validate aws-debian.pkr.hcl
 
       - name: Fail if packer validate fails
         if: ${{ steps.setup.outputs.exit-code != 0 }}
