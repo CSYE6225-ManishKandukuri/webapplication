@@ -1,5 +1,4 @@
-name: test
-
+name: CI
 on:
   pull_request:
     branches:
@@ -7,65 +6,28 @@ on:
   push:
     branches:
       - main
-
 jobs:
-  build:
+  tests:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:5.7
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: aws_database # Specify the name of the database to be created here
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-          
+    env:
+      DB_HOST: '${{ secrets.DB_HOST }}'
+      DB_USER: '${{ secrets.DB_USER }}'
+      DB_PASSWORD: '${{ secrets.DB_PASSWORD }}'
+      DB_DATABASE: '${{ secrets.DB_DATABASE }}'
+      DB_DIALECT: '${{ secrets.DB_DIALECT }}'
     strategy:
       matrix:
-        node-version: [19.2.0]
-
+        node-version:
+          - 18.x
     steps:
-      - name: actions/checkout
-        uses: actions/checkout@v3
-
-      - name: Wait for MySQL to become available
-        run: |
-          for i in {1..30}; do
-            if echo 'SELECT 1' | mysql --host=127.0.0.1 --user=root --password=root &> /dev/null; then
-              break
-            fi
-            echo "Waiting for MySQL..."
-            sleep 1
-          done
-
-      - name: Check and verify database existence
-        run: |
-          echo 'SHOW DATABASES;' | mysql --host=127.0.0.1 --user=root --password=root | grep aws_database
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
+      - uses: actions/checkout@v2
+      - run: npm i
+      - name: 'Using, Node, Express, and Sequelize'
         uses: actions/setup-node@v2
         with:
-          node-version: 14
-
-      - name: Check Current Working Directory
-        run: |
-          pwd  # Print the current working directory
-          ls   # List files in the current directory (optional)
-
-      - name: Load environment variables from .env file
-        run: |
-          source .env
-
-      - name: Install dependencies
-        run: |
-          npm install
-          npm install mocha chai --save-dev
-
-          
-
-      - name: Run Node.js app
-        run: npm test
+          node-version: '18'
+          cache: npm
+      - run: sudo systemctl start mysql
+      - run: systemctl status mysql
+      - run: sudo mysql --user=${{ secrets.DB_USER }} --password=${{ secrets.DB_PASSWORD }} -e "create database ${{ secrets.DB_DATABASE }}";
+      - run: npm test
