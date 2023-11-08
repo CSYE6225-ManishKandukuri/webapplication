@@ -1,360 +1,170 @@
-const express = require('express');
-const sequelize = require('./database.js');
-const fs = require('fs');
-const { parse } = require('csv-parse');
-const bcrypt = require('bcrypt');
-const {uuid} = require('uuidv4');
+//  import express from 'express';
+const express=require("express")
+
+//import cors from 'cors';
+const cors=require("cors")
+
+//const exphbs = require('express-handlebars');
 const bodyParser = require('body-parser');
-const { UserSchema, AssignmentSchema} = require('./models/user_model.js');
-const assignmentRoute = require('./routes/assignment.js');
-const { createUsers, processCSVFile } = require('./userCreate.js')
-const  healthCheckRoutes  = require('./routes/healthCheck.js');
-require('dotenv').config();
+const path = require('path');
 
-//fs.createReadStream('./opt/user.csv');
+const logger = require('./logger/log');
+const statsd = require('./metrics/metriclogger.js');
 
-//app.use(bodyParser.json());
+//import Sequelize from 'Sequelize';
+//const Sequelize = require("sequelize");
 
-/*function isValidJson(value) {
-    try {
-        JSON.parse(JSON.stringify(value));
-        return true;
-    } catch (error) {
-        return false;
-    }
-}*/
+const fs = require('fs');
+const csv = require('csv-parser');
+const routes =require('./Api/routes/routes.js');
+//const bcrypt = require('bcrypt');
 
+const sequelize = require('./Api/config/databaseConfig.js');
 
+const base64 = require("base-64")
+const bcrypt = require("bcryptjs") 
+
+const User = require( './Api//models/userModel.js');
+const Assignment = require( './Api//models/assignmentModel.js');
+
+// Instantiate app
 const app = express();
+
+var corOptions ={
+    origin: 'https://localhost:8080'
+}
+
+// Middleware to parse JSON request bodies
 app.use(bodyParser.json());
 
+// load middleware functions to app 
+app.use(express.json()); // parse request body as json and store in req.body(Getting all Information in JSOn in request body)
+app.use(express.urlencoded());// only parse url encodied req bodies
 
-function isValidJson(req,res,next) {
+app.use(routes);
+
+
+// Middleware to set Cache-Control header
+app.use((req, res, next) => {
+
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+
+});
+
+console.log("Starting DB Sync!");
+
+// Sync both models with the database
+sequelize.sync({ alter: true })
+  .then(() => {
+    console.log("Successfully Synced Models!");
+
+    // Call loadCSVData function to load CSV data and create users
+    loadCSVData(User);
+  })
+  .catch((err) => {
+    console.error("Oops, Error Syncing!:", err);
+  });
+
+
+console.log("Successfully Synced DB");
+
+
+// Load CSV 
+async function loadCSVData(User) {
     try {
-        JSON.parse(JSON.stringify(req.body));
-        next();
-    } catch (error) 
-    {
-        console.log("i am valid function",error);
-        res.status(400).json();
-    }
-}
+      const users = [];
+      fs.createReadStream('./opt/users.csv')
+        .pipe(csv())
+        .on('data', async (row) => {
 
-
-function isEmptyRequest(req, res, next) {
-    if (Object.keys(req.body).length === 0 && Object.keys(req.params).length === 0) 
-    {
-        next();
-    }
-    else
-    {
-        return res.status(400).json();
-    }
-}
-
-
-/*app.use('/v1/assignments', (req, res, next) => {
-
-    if (isValidJson(req.body)) 
-    {
-        next();
-         // Continue to the next middleware or route handler
-    } 
-    else 
-    {
-        res.status(400);
-    }
-
-});*/
-
-
-const setCustomHeaders = (req, res, next) => {
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,Content-Type,Accept,Origin');
-    res.setHeader('Access-Control-Allow-Methods', '*');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Content-Encoding', 'gzip');
-    res.setHeader('Content-Type', 'application/json;charset=utf-8');
-    res.setHeader('ETag', 'W/"a9-N/X4JXf/69QQSQ1CLHMNPzj473I"');
-    res.setHeader('Expires', '-1');
-    next(); // Move to the next middleware or route handler
-};
-
-
-
-
-
-app.use('/v1/assignments', isValidJson, assignmentRoute);
-app.use('/healthz', isValidJson, isEmptyRequest, healthCheckRoutes);
-
-app.use('*', (req,res) => {
-    res.status(404).json();
-})
-
-
-//app.use(setCustomHeaders);
-
-const { User,Assignment,AssignmentCreator } = require('./models');
-//const {  } = require('./models/assignment.js');
-const { UUID, UUIDV4, UniqueConstraintError } = require('sequelize');
-
-
-
-async function bootstrapDatabase() {
-    //console.log('inside the bootstrap')
-    try {
-      await sequelize.authenticate();
-      console.log('Connected to the database');
-      //const pendingMigrations = await sequelize.getMigrator().findPending();
-      await sequelize.sync();
-      //await sequelize.UserSchema.sync({alter: true})
-      //await sequelize.AssignmentSchema.sync({alter: true})
-      console.log('Database bootstrapped successfully');
-      return true;
-    } 
-    catch (error) 
-    {
-        console.log(error);
-        if (error.original.errno === -61)
-        {
-            console.error("Connection refused error");
-        }
-        else
-        {
-            console.error('Error bootstrapping the database:', error);
-        }
-        return false;
-    }
-  }
-
-
-
-
-
-/*function passwordHash(myPlaintextPassword,saltRounds)
-{
-    const hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);
-    return hash;
-}*/
-
-
-//below function creates the users with the data given in the csv file
-
-/*async function createUsers( firstname, lastname, emailID, passwd)
-{
-    try
-    {
-        //const { User } = require('./models/user.js');
-        const user = await User.build
-        ({
-            id: uuid(),
-            first_name: firstname,
-            last_name: lastname,
-            password:  passwordHash(passwd,10),
-            email: emailID,
+          const salt = await bcrypt.genSalt(10);
+          let hashedPassword = await bcrypt.hash(row.password, salt);
+   
+          console.log('hashedPassword.',hashedPassword);
+          const user = new User({
+            first_name: row.first_name,
+            last_name: row.last_name,
+            email: row.email,
+            password: hashedPassword,
             account_created: new Date(),
             account_updated: new Date(),
           });
-          await user.save();
-          console.log(`${emailID} created successfully! with id : ${user.id}`);
-    }
-    catch (error)
-    {
-        console.error('User already exist',error);
-    }
 
-}*/
+          console.log(' Users:'+user.first_name);
+          console.log(' Users email:'+ user.email);
+  
+          // Save the user to the database if it doesn't already exist
+          //const existingUser = await User.findOne({ email: user.email });
+          const existingUser = await User.findOne({ where: { email: row.email } });
 
-//createUsers("jan", "doe", "hello@123", "bar@gmail.com");
-
-
-//const addUser() => ({})
-
-
-/*app.get('/v1/assignments/:id',async (req, res) => {
-
-    var assignment = await Assignment.findAll({
-        where : {
-            id : req.params.id
-        }
-    })
-
-    res.json(assignment).status(200);
-});*/
-
-
-/*app.get('/v1/assignments', async (req,res) => {
-    const authorizationHeader = req.headers.authorization;
-
-    if (!authorizationHeader || !authorizationHeader.startsWith('Basic ')) {
-        return res.status(401).json({ message: 'Invalid Authorization header' });
-      }
-    else
-    {
-        const currentUser = await validateUser(authorizationHeader);
-        console.log(currentUser,"i am here in the current user");
-        if (currentUser)
-        {
-            var curr_assignment = await Assignment.findAll()
-            return res.json(curr_assignment).status(200);
-        }
-        else{
-            return res.json("User not found").status(401);
-        }
-    }
-
-})*/
-
-
-/*app.post('/v1/assignments', async (req,res) => 
-{
-    const authorizationHeader = req.headers.authorization;
-
-    if (!authorizationHeader || !authorizationHeader.startsWith('Basic ')) {
-        return res.status(401).json({ message: 'Invalid Authorization header' });
-      }
-
-    const currentUser = await validateUser(authorizationHeader);
-
-    if (currentUser)
-    {
-        try{
-            const assignment = await Assignment.create
-            ({
-                id : req.body.id,
-                name : req.body.name,
-                points : req.body.points,
-                num_of_attempts : req.body.num_of_attempts,
-                deadline : req.body.deadline,
-                assignment_created : new Date(),
-                assignment_updated : new Date()
-            })
-            res.status(200).json("Successfully created assignment!");
-        }
-        catch (error)
-        {
-            console.error('Error adding assignment:', error);
-        }
-    }
-    else
-    {
-        return res.status(400).json("not success");
-    }
-})*/
-
-//bootstrapDatabase();
-
-const userExist = async (id) => {
-    try{
-        const users = await User.findAll({
-            where: {
-                id : id
-            }
+          if (existingUser != null) {
+            console.log(' Users existing email:'+ existingUser.email);
+        
+          }
+         
+          if (existingUser == null) {
+            user.account_created =new Date();
+            user.account_updated =new Date();
+            await user.save();
+          }
+  
+          users.push(user);
         })
-        console.log(users);
-        return users.length>0;
-    }
-    catch (error)
-    {
-        console.error('Error while searching for the user:', error);
-        return false;
-    }
-}
-
-
-/*const validateUser = async (authorizationHeader) => {
-    try {
-      // Extract the base64-encoded credentials from the Authorization header
-      const base64Credentials = authorizationHeader.split(' ')[1];
-      const credentials = Buffer.from(base64Credentials, 'base64').toString('utf-8');
-      const [username, password] = credentials.split(':');
-  
-      // Find the user by username
-      const user = await User.findOne({ where: { email: username } });
-  
-      // If no user is found, return null (user not found)
-      if (!user) {
-        //console.log("I am returning null");
-        return null;
-      }
-  
-      // Compare the provided password with the hashed password in the database
-      console.log("i am going here now")
-      const passwordMatch = await bcrypt.compare(password, user.password);
-      console.log("password is matched here")
-      console.log(passwordMatch)
-  
-      // If the passwords match, return the user object; otherwise, return null
-      if (passwordMatch) {
-        //console.log(user)
-        return 1;
-      } else {
-        return 0;
-      }
+        .on('end', () => {
+          console.log('Loaded Users:');
+          console.log(users);
+        });
     } catch (error) {
-      console.error('Error while validating user:', error);
-      return 0;
-    }
-  };*/
-
-// function startServer() {
-//     const port = 8080;
-//     app.listen(port, () => {
-//         console.log(`Server is running on port ${port}`);
-//     });
-// }
-
-function startServer() {
-    const port = process.env.PORT || 8080; // Use the environment variable PORT or default to 8080
-    app.listen(port, () => {
-        console.log(`Server is running on port ${port}`);
-    });
-}
-
-async function main() {
-    try {
-      // Bootstrap the database
-      if (await bootstrapDatabase())
-      {
-        processCSVFile();
-        startServer();
-        console.log("success")
-      }
-      else
-      {
-        startServer();
-        console.log("failure");
-      }
-  
-      // Start the server
-      //startServer();
-
-      //processCSVFile();
-
-      //startServer();
-  
-      // Create users
-      //createUsers("jan", "doe", "hello@123", "bar@gmail.com");
-      /*fs.createReadStream("./opt/user.csv")
-      .pipe(parse({ delimiter: ",", from_line: 1 }))
-      .on("data", function (row) {
-        createUsers(row[0], row[1], row[2], row[3]);
-    })
-    .on("error", function (error) {
-        console.log(error.message);
-    })
-    .on("end", function () {
-        console.log("finished");
-    });*/
-
-    } catch (error) {
-      console.error('Error in main:', error);
+      console.error('Error loading CSV file:', error);
     }
   }
 
 
+  app.use((req, res, next) => {
+    const allowedPaths = ['/healthz', '/v1/assignments'];
+   console.log("hello");
+    // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v1/assignments'
+    if (allowedPaths.includes(req.path) && req.path === '/healthz'){
+      if (req.method !== 'GET') {
+        statsd.increment('webappendpoint.healthz.http.Otherthanget');
+        logger.info("This is a checkout where you 405, since the method isn't found"); 
+        // For other endpoints, return a 405 status for non-GET methods
+        res.status(405).send();
+      } 
+      // If the request path is allowed, continue to the next middleware
+      next();
+    } 
+    
+    else if (allowedPaths.includes(req.path) && req.path === '/v1/assignments') {
+      statsd.increment('webappendpoint.assignments.http.patch');
+      // For other endpoints, return a 405 status for non-GET methods
+      if (req.method === 'PATCH') {
+        // For other endpoints, return a 405 status for non-GET methods
+        res.status(405).send();
 
-main();
+      // If the request path is allowed, continue to the next middleware
+      next();
+      } 
+      
+    } 
+    else {
+      // If it's a GET request for other endpoints, continue to the next middleware
+      res.status(404).send();
+    }
+  });
 
-module.exports = app;
+
+// RestAPI port is setted to 8080
+const port = 8087;
+
+// Run the server
+app.listen(port,()=>{
+    console.log('Server is running on port'+ port);
+    console.log('health Restful Api server started on:'+port);
+
+});
+
+module.exports=app

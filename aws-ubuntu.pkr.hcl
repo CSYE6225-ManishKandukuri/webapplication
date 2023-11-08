@@ -47,7 +47,7 @@ source "amazon-ebs" "debian" {
   ami_description = "created from packer"
   source_ami_filter {
     filters = {
-      name                = "debian-*-*-amd64-*"
+      name                = "debian-12-amd64-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
@@ -80,12 +80,14 @@ build {
     destination = "/tmp/webapp.service"
   }
 
-  provisioner "shell" {
-    script = "./installabc.sh"
-  }
-
   provisioner "file" {
     source      = "./amazon-cloudwatch-agent.json"
     destination = "/tmp/amazon-cloudwatch-agent.json"
   }
+
+  provisioner "shell" {
+    script = "./installabc.sh"
+  }
+
+  
 }
