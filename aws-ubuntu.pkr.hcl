@@ -86,7 +86,7 @@ build {
   }
 
   provisioner "shell" {
-    script = "./installabc.sh"
+    script = "./installscript.sh"
   }
 
 
