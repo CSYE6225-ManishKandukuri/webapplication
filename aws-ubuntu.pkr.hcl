@@ -2,7 +2,7 @@ locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
 
- 
+
 
 variable "ami_name" {
   type    = string
@@ -37,7 +37,7 @@ packer {
   }
 }
 
- 
+
 
 source "amazon-ebs" "debian" {
   ami_name        = "${var.ami_name}-${local.timestamp}"
@@ -56,13 +56,13 @@ source "amazon-ebs" "debian" {
   }
   ami_users = ["${var.AMIsharedOwnerID}"]
 
- 
+
 
 }
 
- 
 
- 
+
+
 
 build {
   name = "learn-packer"
@@ -89,5 +89,5 @@ build {
     script = "./installabc.sh"
   }
 
-  
+
 }
