@@ -2,6 +2,7 @@ const base64 = require("base-64")
 const bcrypt = require("bcryptjs")
 const User = require('../models/userModel.js');
 const Assignment = require("../models/assignmentModel.js");
+const Submission = require("../models/submissionModel.js");
 const { v4: uuidv4, validate: uuidValidate } = require('uuid');
 const logger = require('../../logger/log.js');
 const statsd = require('../../metrics/metriclogger.js');
@@ -364,17 +365,41 @@ const deleteAssignment = async (request, response) => {
                                 })
                             }
                             else {
-                                Assignment.destroy({
+                                Submission.findOne({
                                     where: {
-                                        id: id,
+                                        assignment_id: id,
                                     },
+                                    order: [['submission_date', 'DESC']], // Order by submission_date in descending order
+                                })  
+                                .then((submissions) => {
+                                    if (submissions) {
+                                        logger.info(`Submissions Data Found`);
+                                        // Map the assignments to an array of assignment data objects
+                                        logger.error(`Bad Request - Assignement cannot be deleted as it sent for submission`);
+                                        response.status(400).send({
+                                            message: "Bad Request - Assignement cannot be deleted as it sent for submission",
+                                        });
+                                    } else {
+                                        Assignment.destroy({
+                                            where: {
+                                                id: id,
+                                            },
+                                        })
+                                            .then((result) => {
+                                                if (result) {
+                                                    logger.info(`No content - No content available for Assignment`);
+                                                    response.status(204).send({})
+                                                }
+                                            })
+                                    }
                                 })
-                                    .then((result) => {
-                                        if (result) {
-                                            logger.info(`No content - No content available for Assignment`);
-                                            response.status(204).send({})
-                                        }
-                                    })
+                                .catch((error) => {
+                                    console.error("Error fetching assignments:", error);
+                                    response.status(500).send({
+                                        message: "Internal Server Error",
+                                    });
+                                });                           
+                            
                             }
 
                         })

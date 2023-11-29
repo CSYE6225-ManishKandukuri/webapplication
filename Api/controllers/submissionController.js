@@ -23,13 +23,13 @@ const submissionPost = async (request, response) => {
         logger.error(`Bad Request - Request not available`);
         // If there is no request body or it's an empty object, handle it here.
         return response.status(400).send();
-      }
-      const queryParams = request.query;
-      if (Object.keys(queryParams).length > 0) {
+    }
+    const queryParams = request.query;
+    if (Object.keys(queryParams).length > 0) {
         logger.error(`Bad Request - Query params not required`);
         // If request body is not empty, return HTTP 400 Bad Request
         return response.status(400).send();
-      }
+    }
     if (!request.headers.authorization) {
         logger.error(`Bad Request - Authorization Headers is Missing`);
         response.status(400).send({
@@ -37,7 +37,7 @@ const submissionPost = async (request, response) => {
         });
     }
 
-    else if (!uuidValidate(id) || !id ) {
+    else if (!uuidValidate(id) || !id) {
         logger.error(`Bad Request - Invalid AssignmentId`);
         response.status(400).send({ message: "invalid Id" })
     }
@@ -61,146 +61,138 @@ const submissionPost = async (request, response) => {
             });
         }
 
-        //    else if(name===""|| description === "" || sku === "" || manufacturer === "" || quantity === "" || typeof quantity === 'string' || quantity <=0 || quantity>100 ){
-        //         response.status(400).send({
-        //             message: "Invalid entry",
-        //           })
-        //     }
         else {
+            const encodedToken = request.headers.authorization.split(" ")[1];
+            const baseToAlpha = base64.decode(encodedToken).split(":");
+            let decodedUsername = baseToAlpha[0];
+            let decodedPassword = baseToAlpha[1];
             User.findOne({
                 where: {
                     email: decodedUsername,
                 },
             })
-                .then(
-                    async (user) => {
-                        const valid = await bcrypt.compare(decodedPassword, user.getDataValue("password"))
-                        const comp = decodedUsername === user.getDataValue("email");
-                        console.log("comaprision" + comp);
-                        if (valid === true && decodedUsername === user.getDataValue("email")) {
-                            Assignment.findOne({
-                                where: {
-                                    id: id,
-                                },
-                            })
-                                .then(
-                                    async (assignment) => {
-                                        console.log("the assignment " + assignment.id);
-                                        if (!assignment) {
-                                            logger.error(`Not Found - Assignment not found`);
-                                            console.log("the assignment not");
-                                            response.status(404).send({
-                                                message: "Assignment Not available",
-                                            })
-                                        }
-                                        else if (assignment.getDataValue("owner_user_id") !== user.getDataValue("id")) {
-                                            logger.error(`Forbidden - Forbidden Access for Assignmnet`);
-                                            response.status(403).send({
-                                                message: "Unauthorized access",
-                                            })
-                                        }
-                                        else {
-                                            console.log("the Submission submission");
-                                            if (assignment.getDataValue("owner_user_id") === user.getDataValue("id")) {
-                                                console.log("the assignment Submisssion");
-                                                
-                                                Submission.findOne({
-                                                    where: {
-                                                        assignment_id: id,
-                                                    },
-                                                    order: [['submission_date', 'DESC']], // Order by submission_date in descending order
-                                                })
-                                                .then((latestSubmission) => {
-                                                    let latest_attempt = 1;
-                                                
-                                                    if (latestSubmission) {
-                                                        // If a submission is found, extract the submission_attempt
-                                                        latest_attempt = latestSubmission.submission_attempt + 1;
-                                                        console.log(`Latest submission attempt: ${latest_attempt}`);
-                                                    }
-                                                
-                                                    const presentdate = new Date();
-                                                    
-                                                    // Check if the submission is done before the deadline
-                                                    if (latest_attempt <= assignment.num_of_attemps && presentdate <= assignment.deadline) {
-                                                        // Create a new submission record
-                                                        return Submission.create({
-                                                            submission_url: submission_url,
-                                                            assignment_id: id,
-                                                            submission_date: new Date(),
-                                                            submission_updated: new Date(),
-                                                            submission_attempt: latest_attempt
-                                                        });
-                                                    } else {
-                                                        // If the latest attempt exceeds the maximum attempts or submission is after the deadline, handle accordingly
-                                                        if (latest_attempt > assignment.num_of_attemps) {
-                                                            throw new Error('Maximum attempts');
-                                                        } else {
-                                                            throw new Error('Submission deadline');
-                                                        }
-                                                    }
-                                                })
-                                                .then((feedback) => {
-                                                    logger.info("Submission Request created");
-                                                    const dataForSnsMessage = {
-                                                        submission_url: submission_url,
-                                                        user_email: user.getDataValue("email"),
-                                                        assignmentID: request.params.id,
-                                                        submissionID: feedback.getDataValue("id")
-                                                    }
-                                                    publishMessageToSNS(dataForSnsMessage);
-                                                    response.status(201).send({
-                                                        id: feedback.getDataValue("id"),
-                                                        submission_url: feedback.getDataValue("submission_url"),
-                                                        assignment_id: feedback.getDataValue("assignment_id"),
-                                                        submission_date: feedback.getDataValue("submission_date"),
-                                                        submission_updated: feedback.getDataValue("submission_updated")
-                                                    });
-                                                })
-                                                .catch(error => {
-                                                    console.error('Error:', error);
-                                                    logger.error('Error finding or creating submission:', error);
-                                                    if (error.message === 'Maximum attempts') {
-                                                        response.status(400).send({
-                                                            message: 'Maximum attempts exceeded for this assignment',
-                                                        });
-                                                    } else if (error.message === 'Submission deadline') {
-                                                        response.status(400).send({
-                                                            message: 'Submission after the  assignment deadline',
-                                                        });
-                                                    } else {
-                                                        response.status(500).send({
-                                                            message: "Internal Server Error",
-                                                        });
-                                                    }
-                                                });
 
-                                            }
-
-                                            else {
-                                                response.status(400).send({
-                                                    message: "Invalid Assignment Id",
-                                                });
-                                            }
-                                        }
-                                    }
-                                )
-                                .catch((val) => {
-                                    console.log(val);
-                                    logger.error(`Not Found - Assignment Data not Found`);
+                .then(async (user) => {
+                    const valid = await bcrypt.compare(decodedPassword, user.getDataValue("password"))
+                    if (valid === true && decodedUsername === user.getDataValue("email")) {
+                        Assignment.findOne({
+                            where: {
+                                id: id,
+                            },
+                        })
+                            .then(async (assignment) => {
+                                console.log("the assignment " + assignment.id);
+                                if (!assignment) {
+                                    logger.error(`Not Found - Assignment not found`);
+                                    console.log("the assignment not");
                                     response.status(404).send({
-                                        message: "Assignment Resource Not found",
+                                        message: "Assignment Not available",
                                     })
-                                });
+                                }
+                                else {
+                                    console.log("the assignment Submisssion");
+                                    Submission.findOne({
+                                        where: {
+                                            assignment_id: id,
+                                            owner_assignment_id: user.getDataValue("id"),
 
-                        } else {
-                            response.status(401).send({
-                                message: "UnAuthorised. Incorrect password",
-                            });
+                                        },
+                                        order: [['submission_date', 'DESC']], // Order by submission_date in descending order
+                                    })
+                                        .then((latestSubmission) => {
+                                            let latest_attempt = 1;
 
-                        }
+                                            if (latestSubmission) {
+                                                // If a submission is found, extract the submission_attempt
+                                                latest_attempt = latestSubmission.submission_attempt + 1;
+                                                console.log(`Latest submission attempt: ${latest_attempt}`);
+                                            }
+
+                                            const presentdate = new Date();
+
+                                            // Check if the submission is done before the deadline
+                                            if (latest_attempt <= assignment.getDataValue("num_of_attemps") && presentdate <= assignment.getDataValue("deadline")) {
+                                                // Create a new submission record
+                                                Submission.create({
+                                                    submission_url: submission_url,
+                                                    assignment_id: id,
+                                                    submission_date: new Date(),
+                                                    submission_updated: new Date(),
+                                                    submission_attempt: latest_attempt,
+                                                    owner_assignment_id: user.getDataValue("id")
+                                                })
+                                                    .then((feedback) => {
+                                                        logger.info("Submission Request created");
+                                                        const dataForSnsMessage = {
+                                                            submission_url: submission_url,
+                                                            user_email: user.getDataValue("email"),
+                                                            assignmentID: request.params.id,
+                                                            assignment_Name: assignment.getDataValue("name"),
+                                                            submissionID: feedback.getDataValue("id"),
+                                                            submissionCount: feedback.getDataValue("submission_attempt")
+                                                        }
+                                                        publishMessageToSNS(dataForSnsMessage);
+                                                        logger.info("Submission request is published");
+                                                        response.status(201).send({
+                                                            id: feedback.getDataValue("id"),
+                                                            submission_url: feedback.getDataValue("submission_url"),
+                                                            assignment_id: feedback.getDataValue("assignment_id"),
+                                                            submission_date: feedback.getDataValue("submission_date"),
+                                                            submission_updated: feedback.getDataValue("submission_updated")
+                                                        });
+                                                    })
+                                                    .catch(() => {
+                                                        logger.error(`BadRequest - Submission is not created`);
+                                                        response.status(400).send({
+                                                            message: "Bad Request Submission Creation",
+                                                        });
+                                                    });
+
+                                            } else {
+                                                // If the latest attempt exceeds the maximum attempts or submission is after the deadline, handle accordingly
+                                                if (latest_attempt > assignment.num_of_attemps) {
+                                                    throw new Error('Maximum attempts');
+                                                } else {
+                                                    throw new Error('Submission deadline');
+                                                }
+                                            }
+                                        })
+
+                                        .catch(error => {
+                                            console.error('Error:', error);
+                                            logger.error('Error finding or creating submission:', error);
+                                            if (error.message === 'Maximum attempts') {
+                                                response.status(400).send({
+                                                    message: 'Maximum attempts exceeded for this assignment',
+                                                });
+                                            } else if (error.message === 'Submission deadline') {
+                                                response.status(400).send({
+                                                    message: 'Submission after the  assignment deadline',
+                                                });
+                                            } else {
+                                                response.status(400).send({
+                                                    message: "Error finding or creating submission",
+                                                });
+                                            }
+                                        });
+
+                                }
+                            })
+                            .catch((val) => {
+                                console.log(val);
+                                logger.error(`Not found - Assignment Data not Found`);
+                                response.status(404).send({
+                                    message: "Assignment Resource Not found",
+                                })
+                            })
                     }
-                )
+                    else {
+                        logger.error(`Unauthorised - Invalid User Credentials`);
+                        response.status(401).send({
+                            message: "Unauthorised Invalid User credentials",
+                        })
+                    }
+                })
                 .catch((error) => {
                     if (error.name === 'SequelizeConnectionRefusedError') {
                         logger.error(`Bad Request - Service Unavailable`);
@@ -208,12 +200,17 @@ const submissionPost = async (request, response) => {
                             message: "Service Unavailable: Database is disconnected",
                         });
                     } else {
+                        logger.error(`UnAuthorised - Invalid User Credentials`);
                         response.status(401).send({
-                            message: "Unauthorized. Incorrect password",
+                            message: "Unauthorized. Invalid User credentials",
                         });
                     }
-                })
+                });
+
         }
+
+
+
     }
 
 }

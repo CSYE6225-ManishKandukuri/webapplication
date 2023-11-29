@@ -1,5 +1,17 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/databaseConfig.js');
+const logger = require('../../logger/log.js');
+
+function isURL(input) {
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
+    if (!urlRegex.test(input))
+    {
+      logger.info(`Posted URL is not valid rejected by DB`);
+      throw new Error ('Submitted URL is not valid');
+    }
+    logger.info(`given URL is valid`)
+    return true;
+  }
 
 const submission = sequelize.define("submissions", {
     id: {
@@ -17,9 +29,7 @@ const submission = sequelize.define("submissions", {
     submission_url: {
         type: DataTypes.STRING,
         allowNull: false,
-        validate: {
-            isUrl: true
-        },
+        validate: {isURL},
         readOnly: true
     },
     submission_date: {
@@ -35,6 +45,12 @@ const submission = sequelize.define("submissions", {
     submission_attempt: {
         type: DataTypes.INTEGER,
         defaultValue: 0, 
+        allowNull: false
+        
+    },
+    owner_assignment_id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
         allowNull: false
         
     }
