@@ -3,11 +3,10 @@ const AWS = require('aws-sdk');
 
 //const awsProfile = 'sbanala2dev';
 //AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: awsProfile });
-AWS.config.update({ region: 'us-east-1' });
-const sns = new AWS.SNS();
 const snsTopicArn = process.env.ARNSNSTOPIC;
 const snsregion = process.env.AWS_SNS_REGION;
-AWS.config.update({ region: snsregion });
+AWS.config.update({ region: 'us-east-1' });
+const sns = new AWS.SNS();
 
 const publishMessageToSNS = async (request, response) => {
   const message = `Assignment posted by User - ${request.user_email} for Assignment ID - ${request.assignmentID}`;
