@@ -169,7 +169,7 @@ async function loadCSVData(User) {
   });
 
 
-// RestAPI port is setted to 8080
+// RestAPI port is set to 8080
 const port = 8087;
 
 // Run the server
