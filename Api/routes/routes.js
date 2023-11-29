@@ -1,6 +1,7 @@
 const express = require("express");
 const {assignmentPost,updateAssignment,deleteAssignment,getAssignment,getAssignments,patchAssignment,updateAssignments,deleteAssignments,patchAssignments}=require('../controllers/assignmentController.js')
 const {gethealthCheck}=require('../controllers/healthCheckController.js')
+const {submissionPost}=require('../controllers/submissionController.js')
 
 const router = express.Router(); // get router object
 
@@ -21,5 +22,9 @@ router.route('/v1/assignments')
 
 router.route('/healthz')
       .get(gethealthCheck)
+
+//route for 'post' for single instance of todo item based on request parameter 'id'
+router.route('/v1/assignments/:id/submission')
+.post(submissionPost)
       
 module.exports=router

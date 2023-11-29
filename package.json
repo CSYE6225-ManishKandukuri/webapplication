@@ -7,9 +7,10 @@
     "test": "mocha test.js --exit",
     "start": "nodemon app.js"
   },
-  "author": "",
+  "author": "Manish Kandukuri",
   "license": "ISC",
   "dependencies": {
+    "aws-sdk": "^2.1506.0",
     "base-64": "^1.0.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",

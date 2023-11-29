@@ -4,31 +4,13 @@ sleep 30
 
 
 
-
-
-
-
-
- 
-
 sudo apt-get update
-
-
-
-
-
-
 
 sudo apt-get install -y unzip curl
 
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 
 sudo apt-get install -y nodejs
-
-
-
-
-
 
 
 
@@ -73,12 +55,6 @@ cd /home/webappuser/webapp
 
 
 
-
-
-
-
-
- 
 ls -ltrah
  
 pwd
@@ -95,6 +71,9 @@ sudo npm fund
  
 ls -ltrah
  
+ 
+
+
  
 cd /home/admin/
  
