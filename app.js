@@ -124,7 +124,7 @@ async function loadCSVData(User) {
 
 
   app.use((req, res, next) => {
-    const allowedPaths = ['/healthz', '/v1/assignments'];
+    const allowedPaths = ['/healthz', '/v1/assignments','/v1/assignments/:id/submission'];
    console.log("hello");
     // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v1/assignments'
     if (allowedPaths.includes(req.path) && req.path === '/healthz'){
@@ -150,6 +150,18 @@ async function loadCSVData(User) {
       } 
       
     } 
+     // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v1/assignments'
+     if (allowedPaths.includes(req.path) && req.path === '/v1/assignments/:id/submission'){
+      if (req.method !== 'POST') {
+        statsd.increment('webappendpoint.healthz.http.Otherthanget');
+        logger.info("This is a checkout where you 405, since the method isn't found"); 
+        // For other endpoints, return a 405 status for non-GET methods
+        res.status(405).send();
+      } 
+      // If the request path is allowed, continue to the next middleware
+      next();
+    } 
+   
     else {
       // If it's a GET request for other endpoints, continue to the next middleware
       res.status(404).send();
