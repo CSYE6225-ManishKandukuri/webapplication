@@ -1,11 +1,10 @@
 const logger = require('./logger/log');
 const AWS = require('aws-sdk');
-
-//const awsProfile = 'sbanala2dev';
-//AWS.config.credentials = new AWS.SharedIniFileCredentials({ profile: awsProfile });
+require('dotenv').config();
 const snsTopicArn = process.env.ARNSNSTOPIC;
 const snsregion = process.env.AWS_SNS_REGION;
-AWS.config.update({ region: 'us-east-1' });
+
+AWS.config.update({ region: snsregion });
 const sns = new AWS.SNS();
 
 const publishMessageToSNS = async (request, response) => {
@@ -24,9 +23,17 @@ const publishMessageToSNS = async (request, response) => {
       DataType: "String",
       StringValue: request.assignmentID,
     },
+    assignment_Name: {
+      DataType: "String",
+      StringValue: request.assignment_Name,
+    },
     submissionID: {
       DataType: "String",
       StringValue: request.submissionID,
+    },
+    submissionCount: {
+      DataType: "String",
+      StringValue: String(request.submissionCount),
     }
   };
 
