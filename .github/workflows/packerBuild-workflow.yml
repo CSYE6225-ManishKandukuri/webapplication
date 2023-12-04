@@ -63,7 +63,7 @@ jobs:
           export AWS_ACCESS_KEY_ID=${{ secrets.DEMO_AWS_ACCESS_KEY_ID }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
           aws ec2 create-launch-template-version \
-          --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
+          --launch-template-name ${{ vars.LAUNCH_TEMPLATE_ID }} \
           --version-description "New version with AMI ${{ env.AMI_ID }}" \
           --region us-east-1 \
           --source-version 1 \
