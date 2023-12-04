@@ -77,7 +77,7 @@ jobs:
    
           refresh_response=$(aws autoscaling start-instance-refresh \
           --auto-scaling-group-name ${{vars.AUTO_SCALE_GROUP_ID}} \
-          --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateId":"${{ vars.LAUNCH_TEMPLATE_ID }}", "Version":"$Latest" }}' \
+          --desired-configuration '{"LaunchTemplate" : { "LaunchTemplateName":"${{ vars.LAUNCH_TEMPLATE_ID }}", "Version":"$Latest" }}' \
           --region us-east-1 \
           --query 'InstanceRefreshId' \
           --output text)
