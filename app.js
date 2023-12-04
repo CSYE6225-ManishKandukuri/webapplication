@@ -124,9 +124,9 @@ async function loadCSVData(User) {
 
 
   app.use((req, res, next) => {
-    const allowedPaths = ['/healthz', '/v1/assignments','/v1/assignments/:id/submission'];
+    const allowedPaths = ['/healthz', '/v2/assignments','/v2/assignments/:id/submission'];
    console.log("hello");
-    // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v1/assignments'
+    // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v2/assignments'
     if (allowedPaths.includes(req.path) && req.path === '/healthz'){
       if (req.method !== 'GET') {
         statsd.increment('webappendpoint.healthz.http.Otherthanget');
@@ -138,7 +138,7 @@ async function loadCSVData(User) {
       next();
     } 
     
-    else if (allowedPaths.includes(req.path) && req.path === '/v1/assignments') {
+    else if (allowedPaths.includes(req.path) && req.path === '/v2/assignments') {
       statsd.increment('webappendpoint.assignments.http.patch');
       // For other endpoints, return a 405 status for non-GET methods
       if (req.method === 'PATCH') {
@@ -150,8 +150,8 @@ async function loadCSVData(User) {
       } 
       
     } 
-     // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v1/assignments'
-     if (allowedPaths.includes(req.path) && req.path === '/v1/assignments/:id/submission'){
+     // Check if the request path is in the allowed paths or if it starts with '/healthz' or '/v2/assignments'
+     if (allowedPaths.includes(req.path) && req.path === '/v2/assignments/:id/submission'){
       if (req.method !== 'POST') {
         statsd.increment('webappendpoint.healthz.http.Otherthanget');
         logger.info("This is a checkout where you 405, since the method isn't found"); 
