@@ -6,14 +6,14 @@ const {submissionPost}=require('../controllers/submissionController.js')
 const router = express.Router(); // get router object
 
 // route for 'get' (fetch all todo's) and 'post' requests on endpoint '/todo-items' 
-router.route('/v1/assignments/:id')
+router.route('/v2/assignments/:id')
       .get(getAssignment)
       .put(updateAssignment)
       .delete(deleteAssignment)
       .patch(patchAssignment)
 
 //route for 'get', 'put' and 'delete' for single instance of todo item based on request parameter 'id'
-router.route('/v1/assignments')
+router.route('/v2/assignments')
       .post(assignmentPost)
       .get(getAssignments)
       .put(updateAssignments)
@@ -24,7 +24,7 @@ router.route('/healthz')
       .get(gethealthCheck)
 
 //route for 'post' for single instance of todo item based on request parameter 'id'
-router.route('/v1/assignments/:id/submission')
+router.route('/v2/assignments/:id/submission')
 .post(submissionPost)
       
 module.exports=router
