@@ -23,7 +23,9 @@
 ## Users & User Accounts
 
 - Load account information from /opt/user.csv.
+  
 - Hash user passwords using BCrypt before storing them in the database.
+  
 - Users cannot set values for account_created and account_updated.
 
 ## Authentication Requirements
